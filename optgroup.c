@@ -186,6 +186,10 @@ static const struct opt_group fio_opt_cat_groups[] = {
 		.mask	= FIO_OPT_G_NFS,
 	},
 	{
+		.name	= "GD2FS I/O engine", /* GD2FS */
+		.mask	= FIO_OPT_G_GD2FS,
+	},
+	{
 		.name	= NULL,
 	},
 };

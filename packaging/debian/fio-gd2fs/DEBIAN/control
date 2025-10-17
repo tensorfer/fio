@@ -1,0 +1,8 @@
+Package: fio-gd2fs
+Version: 20260616
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: libgd2fs
+Maintainer: support <support@tensorfer.com>
+Description: FIO with libgd2fs supported

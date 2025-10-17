@@ -92,6 +92,13 @@ ifdef CONFIG_LIBNFS
   SOURCE += engines/nfs.c
 endif
 
+ifdef CONFIG_LIBGD2FS
+  gd2fs_SRCS = engines/gd2fs.c
+  gd2fs_LIBS = $(LIBGD2FS_LIBS)
+  gd2fs_CFLAGS = $(LIBGD2FS_CFLAGS)
+  ENGINES += gd2fs
+endif
+
 ifdef CONFIG_64BIT
   CPPFLAGS += -DBITS_PER_LONG=64
 else ifdef CONFIG_32BIT

@@ -187,6 +187,7 @@ disable_pmem="no"
 disable_native="no"
 march_set="no"
 libiscsi="no"
+libgd2fs="no"
 libnbd="no"
 libnfs=""
 xnvme=""
@@ -261,6 +262,8 @@ for opt do
   ;;
   --enable-libiscsi) libiscsi="yes"
   ;;
+  --enable-libgd2fs) libgd2fs="yes"
+  ;;
   --enable-libnbd) libnbd="yes"
   ;;
   --disable-libzbc) libzbc="no"
@@ -329,6 +332,7 @@ if test "$show_help" = "yes" ; then
   echo "--disable-native        Don't build for native host"
   echo "--with-ime=             Install path for DDN's Infinite Memory Engine"
   echo "--enable-libiscsi       Enable iscsi support"
+  echo "--enable-libgd2fs       Enable gd2fs support"
   echo "--enable-libnbd         Enable libnbd (NBD engine) support"
   echo "--disable-xnvme         Disable xnvme support even if found"
   echo "--disable-isal          Disable isal support even if found"
@@ -2420,6 +2424,19 @@ fi
 print_config "NFS engine" "$libnfs"
 
 ##########################################
+# Check if we have libgd2fs
+if test "$libgd2fs" != "no" ; then
+  if $(pkg-config libgd2fs > /dev/null 2>&1); then
+    libgd2fs="yes"
+    libgd2fs_cflags=$(pkg-config --cflags libgd2fs)
+    libgd2fs_libs=$(pkg-config --libs libgd2fs)
+  else
+    libgd2fs="no"
+  fi
+fi
+print_config "gd2fs engine" "$libgd2fs"
+
+##########################################
 # Check if we have lex/yacc available
 yacc="no"
 yacc_is_bison="no"
@@ -3414,6 +3431,13 @@ if test "$libiscsi" = "yes" ; then
   echo "CONFIG_LIBISCSI=m" >> $config_host_mak
   echo "LIBISCSI_CFLAGS=$libiscsi_cflags" >> $config_host_mak
   echo "LIBISCSI_LIBS=$libiscsi_libs" >> $config_host_mak
+fi
+if test "$libgd2fs" = "yes" ; then
+  output_sym "CONFIG_LIBGD2FS"
+  echo "CONFIG_LIBGD2FS=m" >> $config_host_mak
+  echo "LIBGD2FS_CFLAGS=$libgd2fs_cflags" >> $config_host_mak
+  # libcuda and libcudart is also requied by libgd2fs engine
+  echo "LIBGD2FS_LIBS=$libgd2fs_libs -lcuda -lcudart" >> $config_host_mak
 fi
 if test "$libnbd" = "yes" ; then
   output_sym "CONFIG_LIBNBD"
