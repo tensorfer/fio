@@ -193,7 +193,11 @@ static int fio_gd2fs_open_file(struct thread_data *td, struct fio_file *f)
 	xfer_gd2fs_stat sb = {0};
 	xfer_gd2fs_completion completion = {0};
 	void *id = (void *)__func__;
-	uint8_t err_code;
+	uint8_t err_class, err_code;
+
+	if (f->real_file_size != -1ULL) {
+		return 0;
+	}
 
 	xfer_gd2fs_fstat(xctx, id, f->file_name, &sb);
 	xfer_gd2fs_wait(xctx, &completion, 1, GD2FS_TIMEOUT_MS);
@@ -211,14 +215,19 @@ static int fio_gd2fs_open_file(struct thread_data *td, struct fio_file *f)
 	}
 
 	id = (void *)__func__;
-	xfer_gd2fs_create(xctx, id, f->file_name, 0, 0);
+	xfer_gd2fs_create(xctx, id, f->file_name, 0, f->io_size);
 	xfer_gd2fs_wait(xctx, &completion, 1, GD2FS_TIMEOUT_MS);
+	err_class = XFER_GD2FS_STATUS_CLASS(completion.status);
 	err_code = XFER_GD2FS_STATUS_CODE(completion.status);
 	if (err_code) {
-		log_err("gd2fs: Failed to create %s%s for WRITE %d(%s)", xoptions->cpaddr, f->file_name, err_code, strerror(err_code));
-		return -err_code;
+		/* multiple jobs create the same file, only one succeeds, others get EEXIST from server */
+		if ((err_class != XFER_GD2FS_STATUS_CLASS_SERVER) || (err_code != EEXIST)) {
+			log_err("gd2fs: Failed to create %s%s for WRITE %d(%s)", xoptions->cpaddr, f->file_name, err_code, strerror(err_code));
+			return -err_code;
+		}
 	}
 
+	f->real_file_size = f->io_size;
 	return 0;
 }
 
